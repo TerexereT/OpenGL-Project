@@ -1,11 +1,12 @@
 #include "Model.h"
 
-unsigned int CModel::VBO = 0;
-unsigned int CModel::VAO = 0;
+//unsigned int CModel::VBO = 0;
+//unsigned int CModel::VAO = 0;
 
 
 CModel::CModel()
 {
+	modl = glm::mat4(1.0f);
 	mTranslation[0] = mTranslation[1] = mTranslation[2] = 0.0f;	
 	mScale[0] = mScale[1] = mScale[2] = mScale[3] = 1.0f;
 	mRotate = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -43,7 +44,7 @@ CModel::~CModel()
 
 void CModel::Bind()
 {
-	
+	glBindVertexArray(VAO);
 }
 
 void CModel::Draw()
@@ -53,41 +54,6 @@ void CModel::Draw()
 
 void CModel::display()
 {
-	
-	//glColor4f(mMColor[0], mMColor[1], mMColor[2], mMColor[3]);
-
-	if (showPuntos)
-	{
-		glDisable(GL_LIGHTING);
-		//glColor4f(mMColor[0], mMColor[1], mMColor[2], mMColor[3]);
-		glPolygonMode(GL_FRONT_AND_BACK,GL_POINT);
-	}
-	if (showLineas)
-	{
-		//glColor4f(mMColor[0], mMColor[1], mMColor[2], mMColor[3]);
-		glDisable(GL_LIGHTING);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		//glPolygonOffset();
-	}
-	
-	if (showTriangulos)
-	{
-		//glEnable(GL_LIGHTING);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		
-	}
-
-
-//------------------------------------------------------------------//
-	if (showbbox)
-	{
-		this->BoundingBox();
-	}
-	
-
-
-	
-
 
 }
 
@@ -300,6 +266,7 @@ void CModel::setTranslation(glm::vec3 translation)
 {
 	if (&translation != NULL) 
 		mTranslation = translation;
+	this->setMatModel();
 	
 }
 
@@ -312,6 +279,7 @@ void CModel::setScale(glm::vec4 scale)
 {
 	if (&scale != NULL)
 		mScale = scale;
+	this->setMatModel();
 
 }
 
@@ -335,6 +303,8 @@ glm::vec3 CModel::getRotate()
 void CModel::setRotate(glm::vec3 quaternion)
 {
 	mRotate = quaternion;
+	this->setMatRot();
+	this->setMatModel();
 }
 
 /*void CModel::setModo(enumModo modo)
@@ -407,23 +377,46 @@ void CModel::calculateNormals()
 		mNormalesV.push_back(auxnorm2);
 		cant = 1;
 	}
+
+	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &IBO);
+	glDeleteVertexArrays(1, &VAO);
+
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &IBO);
+	glBindVertexArray(VAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * mVertices.size(), &mVertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned) * cantidad, this->getIndex(), GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
 }
 
 void CModel::displayNormalsFace()
 {
 
 	//glDisable(GL_LIGHTING);
-	glColor3f(mNFColor[0], mNFColor[1], mNFColor[2]);
+	//glColor3f(mNFColor[0], mNFColor[1], mNFColor[2]);	
 	glPointSize(1.0);
-
-
-
 	for (int i = 0; i < mNormalesC.size(); i++)
 	{
 		glBegin(GL_LINES);
+		glVertex3f(mCentroideC[i].x, mCentroideC[i].y, mCentroideC[i].z);
+		glVertex3f((mNormalesC[i].x + mCentroideC[i].x) * disN, (mNormalesC[i].y + mCentroideC[i].y) * disN, (mNormalesC[i].z + mCentroideC[i].z) * disN);
+		glEnd();
+		
+		/*glBegin(GL_LINES);
 			glVertex3f(mCentroideC[i].x, mCentroideC[i].y, mCentroideC[i].z);
 			glVertex3f((-mNormalesC[i].x + mCentroideC[i].x) *disN , (-mNormalesC[i].y + mCentroideC[i].y)*disN, (-mNormalesC[i].z + mCentroideC[i].z)*disN);
-		glEnd();
+		glEnd();*/
 	}
 
 	glPointSize(1.0);
@@ -432,19 +425,19 @@ void CModel::displayNormalsFace()
 void CModel::displayNormalsVertex()
 {
 	//glDisable(GL_LIGHTING);
-	glColor3f(mNVColor[0], mNVColor[1], mNVColor[2]);
+	//glColor3f(mNVColor[0], mNVColor[1], mNVColor[2]);
 	glPointSize(1.0);
 	for (int i = 0; i < mNormalesV.size(); i++)
 	{
-		/*glBegin(GL_LINES);
-			glVertex3f(mVertices[i].x, mVertices[i].y, mVertices[i].z);
-			glVertex3f((mNormalesV[i].x + mVertices[i].x), (mNormalesV[i].y + mVertices[i].y), (mNormalesV[i].z + mVertices[i].z));
-		glEnd();*/
-
 		glBegin(GL_LINES);
 			glVertex3f(mVertices[i].x, mVertices[i].y, mVertices[i].z);
-			glVertex3f((-mNormalesV[i].x + mVertices[i].x)*disN, (-mNormalesV[i].y + mVertices[i].y)*disN, (-mNormalesV[i].z + mVertices[i].z)*disN);
+			glVertex3f((mNormalesV[i].x + mVertices[i].x) * disN, (mNormalesV[i].y + mVertices[i].y) * disN, (mNormalesV[i].z + mVertices[i].z) * disN);
 		glEnd();
+
+		/*glBegin(GL_LINES);
+			glVertex3f(mVertices[i].x, mVertices[i].y, mVertices[i].z);
+			glVertex3f((-mNormalesV[i].x + mVertices[i].x)*disN, (-mNormalesV[i].y + mVertices[i].y)*disN, (-mNormalesV[i].z + mVertices[i].z)*disN);
+		glEnd();*/
 	}
 	glPointSize(1.0);
 }
@@ -459,17 +452,17 @@ vector<vector<unsigned>> CModel::getCaras()
 	return mCaras;
 }
 
-unsigned* CModel::getIndex() {
+unsigned int* CModel::getIndex() {
 	unsigned* indices;
-	int cantidad = mNumOfCaras * 3;
+	//cantidad = mNumOfCaras * 3;
 	indices = new unsigned[cantidad];
 	int canI = 0;
 	for (int i = 0; i < cantidad; i += 3) {
 		//cout << "en el arreglo: "<<i << endl;
 		if (canI < mNumOfCaras) {
-			indices[i] = (unsigned)mCaras[canI][0];
-			indices[i + 1] = (unsigned)mCaras[canI][1];
-			indices[i + 2] = (unsigned)mCaras[canI][2];
+			indices[i] = (unsigned int)mCaras[canI][0];
+			indices[i + 1] = (unsigned int)mCaras[canI][1];
+			indices[i + 2] = (unsigned int)mCaras[canI][2];
 			canI++;
 			//cout <<"en el indice: "<< canI << endl;
 			//cout << indices[i] << " " << indices[i + 1] << " " << indices[i + 2] << endl;
@@ -486,4 +479,41 @@ void CModel::setDisN(float distancia)
 float CModel::getDisN()
 {
 	return disN;
+}
+
+void CModel::setMatRot()
+{
+	glm::vec3 rotacion = this->getRotate();
+	glm::mat4 rotXm = glm::rotate(rotacion.x, glm::vec3(1.0, 0.0, 0.0));
+	glm::mat4 rotYm = glm::rotate(rotacion.y, glm::vec3(0.0, 1.0, 0.0));
+	glm::mat4 rotZm = glm::rotate(rotacion.z, glm::vec3(0.0, 0.0, 1.0));
+	R = rotZm * rotYm * rotXm;
+}
+
+//glm::mat4 CModel::getMatModel()
+void CModel::setMatModel()
+{
+	
+
+	glm::vec4 vecScale = this->getScale();
+	glm::mat4 S;
+	if (vecScale.w != 1.0f)
+	{
+		S = glm::scale(glm::vec3(vecScale.w, vecScale.w, vecScale.w));
+	}
+	else {
+		S = glm::scale(glm::vec3(vecScale.x, vecScale.y, vecScale.z));
+	}
+
+	glm::mat4 T = glm::translate(this->getTranslation());
+
+	modl = T * S * R;
+
+	//return modl;
+	
+}
+
+glm::mat4 CModel::getMatModel()
+{
+	return modl;
 }

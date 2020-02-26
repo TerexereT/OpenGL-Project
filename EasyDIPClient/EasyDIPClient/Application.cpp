@@ -150,47 +150,10 @@ void Application::Render()
 	
 	if(picked!=-1){
 		
-		glm::mat4 modl = glm::mat4(1.0f);
-		glm::mat4 view = glm::mat4(1.0f);
 		CModel* modelo = models[picked];
-		/*float *modelColor = modelo->getMColor();
-		shader->setFloat("mColorR", modelColor[0]);
-		shader->setFloat("mColorG", modelColor[1]);
-		shader->setFloat("mColorB", modelColor[2]);*/
-		//shader->setFloat("mColorA", modelColor[3]);
-		if (projectionActual == PERSPECTIVE)
-		{
-			//Perspective
-			proj = glm::mat4(1.0f);
-			proj = glm::perspective(glm::radians(45.0f), (float)windowWidth / (float)windowHeight, NCP, 100.0f);
-		}
-		else
-		{
-			//Orthogonal
-			proj = glm::mat4(1.0f);
-			proj = glm::ortho(-(float)windowWidth / 800.0f, (float)windowWidth / 800.0f, -(float)windowHeight / 800.0f, (float)windowHeight / 800.0f, NCP, 100.0f);
-		}
+		glm::mat4 modl = glm::mat4(1.0f);
 
-		glm::vec3 rotacion= modelo->getRotate();
-
-		glm::mat4 rotXm = glm::rotate(rotacion.x, glm::vec3(1.0, 0.0, 0.0));
-		glm::mat4 rotYm = glm::rotate(rotacion.y, glm::vec3(0.0, 1.0, 0.0));
-		glm::mat4 rotZm = glm::rotate(rotacion.z, glm::vec3(0.0, 0.0, 1.0));
-		glm::mat4 R = rotZm * rotYm * rotXm;
-		
-		glm::vec4 vecScale= modelo->getScale();
-		glm::mat4 S;
-		if(vecScale.w!=1.0f)
-		{
-			S = glm::scale(glm::vec3(vecScale.w, vecScale.w, vecScale.w));
-		}
-		else {
-			S = glm::scale(glm::vec3(vecScale.x, vecScale.y, vecScale.z));
-		}
-		
-		glm::mat4 T = glm::translate(modelo->getTranslation());
-
-		modl = T * S * R;
+		modl = modelo->getMatModel();
 
 		view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 2.0f, 0.0f));
 
@@ -199,30 +162,9 @@ void Application::Render()
 		shader->setMat4("modl", modl);
 		shader->use();
 
-		int numVert = modelo->getnumVert();
 		int cantidad = modelo->getCaras().size()*3;
 		unsigned* indices = modelo->getIndex();
-		//cout << numVert << " " << numIn << endl;
-		vector<glm::vec3> vertices = modelo->getVertices();
-	
-		unsigned int VBO, VAO, IBO;
-		glGenVertexArrays(1, &VAO);
-		glGenBuffers(1, &VBO);
-		glGenBuffers(1, &IBO);
-		glBindVertexArray(VAO);
-
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-
-		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned) * cantidad, indices, GL_STATIC_DRAW);
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
-
-		glBindVertexArray(VAO);
+		modelo->Bind();
 
 		if (actP)
 		{
@@ -260,7 +202,7 @@ void Application::Render()
 			glDrawElements(GL_TRIANGLES, cantidad, GL_UNSIGNED_INT, nullptr);
 			glDisable(GL_POLYGON_OFFSET_FILL);
 		}
-		//glDrawElements(GL_TRIANGLES, cantidad, GL_UNSIGNED_INT, nullptr);
+		
 	}
 
 	
@@ -341,6 +283,17 @@ void Application::ImGui()
 		const char* despliegues[Element_COUNT] = { "Perspective", "Orthogonal"};
 		const char* current_element_name = (projectionActual >= 0 && projectionActual < Element_COUNT) ? despliegues[projectionActual] : "Unknown";
 		ImGui::SliderInt("Deployment", &projectionActual, 0, Element_COUNT - 1, current_element_name);
+		if (projectionActual == PERSPECTIVE)
+		{
+			//Perspective
+			proj = glm::perspective(glm::radians(45.0f), (float)windowWidth / (float)windowHeight, NCP, 100.0f);
+		}
+		else
+		{
+			//Orthogonal
+			proj = glm::ortho(-(float)windowWidth / 800.0f, (float)windowWidth / 800.0f, -(float)windowHeight / 800.0f, (float)windowHeight / 800.0f, NCP, 100.0f);
+		}
+
 
 		ImGui::PushItemWidth(100);
 		if (ImGui::DragFloat("Near Clipping Plane", &NCP, 0.01f));
@@ -417,23 +370,47 @@ void Application::ImGui()
 			if (ImGui::Checkbox("Bounding Box", &actB))models[picked]->setShowBox();
 			if (actB)
 			{
+				static float colorNormalsB[3] = { 0.6f,1.0f,1.0f };
+				//models[picked]->setNFColor(colorNormalsF[0], colorNormalsF[1], colorNormalsF[2]);
+				if (ImGui::ColorEdit3("Color B", colorNormalsB))
+				{
+					models[picked]->setBColor(colorNormalsB[0], colorNormalsB[1], colorNormalsB[2]);
+				}
+				shader->setFloat("mColorR", colorNormalsB[0]);
+				shader->setFloat("mColorG", colorNormalsB[1]);
+				shader->setFloat("mColorB", colorNormalsB[2]);
 				models[picked]->BoundingBox();
 			}
 
 			if (ImGui::Checkbox("Normals Vertex", &shownormalsV));// models[picked]->displayNormalsVertex();
 			if (shownormalsV)
 			{
+				static float colorNormalsV[3] = { 0.6f,1.0f,1.0f };
+				//models[picked]->setNFColor(colorNormalsF[0], colorNormalsF[1], colorNormalsF[2]);
+				if (ImGui::ColorEdit3("Color V", colorNormalsV))
+				{
+					models[picked]->setNVColor(colorNormalsV[0], colorNormalsV[1], colorNormalsV[2]);
+				}
+				shader->setFloat("mColorR", colorNormalsV[0]);
+				shader->setFloat("mColorG", colorNormalsV[1]);
+				shader->setFloat("mColorB", colorNormalsV[2]);
 				models[picked]->displayNormalsVertex();
 			}
 			
 			if(ImGui::Checkbox("Normals Faces", &shownormalsF));
 			if (shownormalsF)
 			{
-				models[picked]->displayNormalsFace();
-				//static float colorNormalsF[3] = { 0.5f,0.f,0.6f };
+				
+				static float colorNormalsF[3] = { 0.5f,0.f,0.6f };
 				//models[picked]->setNFColor(colorNormalsF[0], colorNormalsF[1], colorNormalsF[2]);
-				//if(ImGui::ColorEdit3("Color", colorNormalsF))models[picked]->setNFColor(colorNormalsF[0], colorNormalsF[1], colorNormalsF[2]);
-
+				if (ImGui::ColorEdit3("Color F", colorNormalsF))
+				{
+					models[picked]->setNFColor(colorNormalsF[0], colorNormalsF[1], colorNormalsF[2]);
+				}
+				shader->setFloat("mColorR", colorNormalsF[0]);
+				shader->setFloat("mColorG", colorNormalsF[1]);
+				shader->setFloat("mColorB", colorNormalsF[2]);
+				models[picked]->displayNormalsFace();
 			}
 	
 			if (ImGui::TreeNode("Translation"))
@@ -534,12 +511,6 @@ void Application::setModelRotate(glm::vec3 quaternion)
 
 glm::vec3 Application::getModelRotate()
 {
-	/*vec4 vec;
-	quat qt = models[picked]->getRotate();
-	vec[0] = qt.x;
-	vec[1] = qt.y;
-	vec[2] = qt.z;
-	vec[3] = qt.w;*/
 	return  models[picked]->getRotate();
 }
 

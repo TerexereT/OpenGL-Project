@@ -169,6 +169,7 @@ bool COff::load(string path)
 		mVertices = mVerticesNorm;
 
 		mNumOfCaras = mCaras.size();
+		cantidad = mNumOfCaras * 3;
 		file.close();
 		return true;
 	}

@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include "glm/gtx/transform.hpp"
 
 using namespace std;
 
@@ -36,13 +37,16 @@ class CModel
 	protected:
 		vector<glm::vec3> mVertices;
 		vector<glm::vec3> mVerticesNorm;
-		static unsigned int VBO, VAO;
+		unsigned int VBO, VAO, IBO;
 		vector<vector<unsigned>> mCaras;
 		glm::vec3 mTranslation;
 		glm::vec4 mScale;
 		glm::vec3 mRotate;
+		glm::mat4 modl;
+		glm::mat4 R;
 		int mNumOfVertices;
 		int mNumOfCaras;
+		int cantidad;
 		float xMin, xMax, yMin, yMax, zMin, zMax, xCen, yCen, zCen,maxVal, disN;
 		float mBColor[3] /*Boundin box*/, mMColor[4], mMColor2[4], mMColor3[4], mNFColor[3], mNVColor[3];
 		float shininess;
@@ -69,9 +73,13 @@ class CModel
 		void displayNormalsVertex();
 		vector<glm::vec3> getVertices();
 		vector<vector<unsigned>> getCaras();
-		unsigned* getIndex();
+		unsigned int* getIndex();
 		void setDisN(float distancia);
 		float getDisN();
+		void setMatRot();
+		glm::mat4 getMatRot();
+		void setMatModel();
+		glm::mat4 getMatModel();
 		void setScale(glm::vec4 scale);
 		glm::vec3 boundingVertex(bool d);
 		glm::vec3 getRotate();

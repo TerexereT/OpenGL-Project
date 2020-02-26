@@ -227,6 +227,7 @@ bool CObj::load(string path)
 
 	mNumOfCaras = mCaras.size();
 	mNumOfVertices = mVertices.size();
+	cantidad = mNumOfCaras * 3;
 	in.close();
 	return true;
 	   
