@@ -151,8 +151,7 @@ void Application::Render()
 	if(picked!=-1){
 		
 		CModel* modelo = models[picked];
-		glm::mat4 modl = glm::mat4(1.0f);
-
+		glm::mat4 modl;// = glm::mat4(1.0f);
 		modl = modelo->getMatModel();
 
 		view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 2.0f, 0.0f));
@@ -162,8 +161,8 @@ void Application::Render()
 		shader->setMat4("modl", modl);
 		shader->use();
 
-		int cantidad = modelo->getCaras().size()*3;
-		unsigned* indices = modelo->getIndex();
+		int cantidad = modelo->getNumIndex();
+		
 		modelo->Bind();
 
 		if (actP)

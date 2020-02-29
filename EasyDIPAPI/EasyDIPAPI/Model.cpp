@@ -137,6 +137,11 @@ int CModel::getnumVert()
 	return mNumOfVertices;
 }
 
+int CModel::getNumIndex()
+{
+	return cantidad;
+}
+
 bool CModel::getShowBox()
 {
 	return showbbox;

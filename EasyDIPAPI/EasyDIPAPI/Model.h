@@ -87,6 +87,7 @@ class CModel
 		void setModo(enumModo modo);
 		enumModo getModo();
 		int getnumVert();
+		int getNumIndex();
 		bool getShowBox();
 		void setShowBox();
 		bool getShowPuntos();
