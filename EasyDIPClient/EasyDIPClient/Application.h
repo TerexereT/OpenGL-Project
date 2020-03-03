@@ -35,9 +35,10 @@ class Application
 	float NCP = 0.1f;
 
 	bool show_demo_window = true;
-	bool shownormalsF = false, shownormalsV = false, showBBox = false, showlights = false, backFace = false, zBuffer = true, actP = false, actL = false, actT = false;
+	bool shownormalsF = false, shownormalsV = false, showBBox = false, showlights = false, backFace = false, zBuffer = true, lightSwitch = false;// , actP = false, actL = false, actT = false;
 
 	vector <CModel*> models;
+	vector <CModel*> lights;
 	Shader* shader;
 
 
@@ -45,6 +46,11 @@ class Application
 	glm::mat4 view = glm::mat4(1.0f);
 	glm::quat rot;
 
+	glm::vec4 lightambient = { 1.0, 1.0, 1.0, 1.0 };
+	glm::vec4 lightdiffuse = { 1.0, 1.0, 1.0, 1.0 };
+	glm::vec4 lightspecular = { 1.0, 1.0, 1.0, 1.0 };
+	glm::vec3 lightposition1 = { 2.0, -2.0, -8.0};
+	glm::vec3 lightposition2 = { -2.0, 2.0, -6.0};
 
 	//typeShading shadeactual = FLAT; //Para tarea 4
 
@@ -65,6 +71,8 @@ public:
 
 	void Application::setModelRotate(glm::vec3 quaternion);
 	glm::vec3 Application::getModelRotate();
+
+	void initLights();
 	
 	static void HelpMarker(const char* desc);
 

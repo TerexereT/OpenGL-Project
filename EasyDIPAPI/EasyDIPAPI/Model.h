@@ -8,8 +8,11 @@
 #include <string>
 #include <fstream>
 #include "glm/gtx/transform.hpp"
+#include "shaders/Shader.h"
 
 using namespace std;
+extern Shader* shader;
+
 
 enum enumModo
 {
@@ -61,9 +64,10 @@ class CModel
 		CModel();
 		~CModel();
 		void Bind();
-		void Draw();
+		void DrawP();
+		void DrawL();
+		void DrawT();
 		//virtual bool load(string path) = 0;
-		virtual void display();
 		void BoundingBox();
 		void setTranslation(glm::vec3 translation);
 		glm::vec3 getTranslation();
@@ -77,15 +81,12 @@ class CModel
 		void setDisN(float distancia);
 		float getDisN();
 		void setMatRot();
-		glm::mat4 getMatRot();
 		void setMatModel();
 		glm::mat4 getMatModel();
 		void setScale(glm::vec4 scale);
 		glm::vec3 boundingVertex(bool d);
 		glm::vec3 getRotate();
 		void setRotate(glm::vec3 quaternion);
-		void setModo(enumModo modo);
-		enumModo getModo();
 		int getnumVert();
 		int getNumIndex();
 		bool getShowBox();
@@ -100,19 +101,19 @@ class CModel
 		//typeShading getShading(); //Tarea 4
 		void setBColor(float r, float g, float b);
 		void setMColor(float r, float g, float b, float a);
-		//void setMColor2(float r, float g, float b, float a); //Tarea 4	
-		//void setMColor3(float r, float g, float b, float a); //Tarea 4
+		void setMColor2(float r, float g, float b, float a); //Tarea 4	
+		void setMColor3(float r, float g, float b, float a); //Tarea 4
 		void setNFColor(float r, float g, float b);
 		void setNVColor(float r, float g, float b);
-		//void setshininess(float shini);
+		void setshininess(float shini);
 
 		float * getBColor();
 		float * getMColor();
-		//float * getMColor2();
-		//float * getMColor3();
+		float * getMColor2();
+		float * getMColor3();
 		float * getNFColor();
 		float * getNVColor();
-		//float getshininess();
+		float getshininess();
 
 		/*void dImmediate();
 		void dDisplayList();

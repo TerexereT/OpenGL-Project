@@ -1,7 +1,6 @@
 #include "Application.h"
 
 
-
 //#include <EasyDIPAPI\Loaders.cpp>
 
 
@@ -147,65 +146,58 @@ void Application::MainLoop()
 
 void Application::Render()
 {
-	
-	if(picked!=-1){
-		
-		CModel* modelo = models[picked];
-		glm::mat4 modl;// = glm::mat4(1.0f);
-		modl = modelo->getMatModel();
+	view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 2.0f, 0.0f));
+	shader->setMat4("proj", proj);
+	shader->setMat4("view", view);
 
-		view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 2.0f, 0.0f));
+	if(picked!=-1)
+	{
 
-		shader->setMat4("proj", proj);
-		shader->setMat4("view", view);
-		shader->setMat4("modl", modl);
-		shader->use();
-
-		int cantidad = modelo->getNumIndex();
-		
-		modelo->Bind();
-
-		if (actP)
+		for (int i = 0; i <= picked; i++)
 		{
-			//glEnable(GL_POLYGON_OFFSET_POINT);
-			glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+			CModel* modelo = models[i];
+			modelo->Bind();
+			glm::mat4 modl = modelo->getMatModel();// = glm::mat4(1.0f);
+			shader->setMat4("modl", modl);
+			
 			shader->setFloat("mColorR", colorPoint[0]);
 			shader->setFloat("mColorG", colorPoint[1]);
 			shader->setFloat("mColorB", colorPoint[2]);
-			//glPolygonOffset(0.0f, 0.0f);
-			glPointSize(2.3f);
-			glDrawElements(GL_TRIANGLES, cantidad, GL_UNSIGNED_INT, nullptr);
-			//glDisable(GL_POLYGON_OFFSET_POINT);
-			glPointSize(1.0f);
-		}
-		if(actL)
-		{
-			glEnable(GL_POLYGON_OFFSET_LINE);
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			modelo->DrawP();
+			
 			shader->setFloat("mColorR", colorLine[0]);
 			shader->setFloat("mColorG", colorLine[1]);
-			shader->setFloat("mColorB", colorLine[2] );
-			glPolygonOffset(4.0f, 4.0f);
-			glDrawElements(GL_TRIANGLES, cantidad, GL_UNSIGNED_INT, nullptr);
-			glDisable(GL_POLYGON_OFFSET_LINE);
-		}
-		if (actT)
-		{
-			glEnable(GL_POLYGON_OFFSET_FILL);
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			float *modelColor = modelo->getMColor();
+			shader->setFloat("mColorB", colorLine[2]);
+			modelo->DrawL();
+			
+			float* modelColor = modelo->getMColor();
 			shader->setFloat("mColorR", modelColor[0]);
 			shader->setFloat("mColorG", modelColor[1]);
 			shader->setFloat("mColorB", modelColor[2]);
-			glPolygonOffset(8.0f, 8.0f);
-			glDrawElements(GL_TRIANGLES, cantidad, GL_UNSIGNED_INT, nullptr);
-			glDisable(GL_POLYGON_OFFSET_FILL);
-		}
+			modelo->DrawT();
 		
+		}
+
+	}
+	if (lightSwitch)
+	{
+		for (int i = 0; i <= 1; i++)
+		{
+			CModel* luz = lights[i];
+			luz->Bind();
+			glm::mat4 modl = luz->getMatModel();// = glm::mat4(1.0f);
+			shader->setMat4("modl", modl);
+			float* modelColor = luz->getMColor();
+			shader->setFloat("mColorR", modelColor[0]);
+			shader->setFloat("mColorG", modelColor[1]);
+			shader->setFloat("mColorB", modelColor[2]);
+			luz->DrawT();
+
+		}
 	}
 
+	shader->use();
 	
-
 	/*Quad *quad = Quad::Instance();
 	if (bwShader) {
 		bwShader->use();
@@ -249,6 +241,7 @@ void Application::ImGui()
 				scale0.x = scale0.y = scale0.z = scale0.w = 1.0f;
 				rotate0.x = rotate0.y = rotate0.z = 0.0f;
 
+
 				models[picked]->setTranslation(traslation0);
 				models[picked]->setScale(scale0);
 				models[picked]->setRotate(rotate0);
@@ -271,8 +264,8 @@ void Application::ImGui()
 	ImGui::InputInt("Model Number", &picked);
 	ImGui::Text("+/- para desplazarte entre figuras cargadas");
 	ImGui::Separator();
-	if(ImGui::TreeNode("Screen Options"))
-	{
+	//if(ImGui::TreeNode("Screen Options"))
+	//{
 		
 		if (ImGui::ColorEdit3("Background Color", colorFondo))
 		{	
@@ -322,25 +315,26 @@ void Application::ImGui()
 		{
 			glDisable(GL_DEPTH_TEST);
 		}
+		ImGui::Checkbox("Lights Switch", &lightSwitch);
 
-	ImGui::TreePop();
-	}
+	//ImGui::TreePop();
+	//}
 	ImGui::Separator();
 
 	if (ImGui::TreeNode("Model")) 
 	{
 		if (picked > -1)
 		{
-			//bool actP = models[picked]->getShowPuntos();
-			if(ImGui::Checkbox("Points", &actP)); 
+			bool actP = models[picked]->getShowPuntos();
+			if (ImGui::Checkbox("Points", &actP))models[picked]->setShowPuntos();
 			ImGui::SameLine();
 
-			//bool actL = models[picked]->getShowLineas();
-			if(ImGui::Checkbox("Wire-frame", &actL));
+			bool actL = models[picked]->getShowLineas();
+			if(ImGui::Checkbox("Wire-frame", &actL))models[picked]->setShowLineas();
 			ImGui::SameLine();
 
-			//bool actT = models[picked]->getShowTriangulos();
-			if(ImGui::Checkbox("Triangles", &actT));
+			bool actT = models[picked]->getShowTriangulos();
+			if(ImGui::Checkbox("Triangles", &actT))models[picked]->setShowTriangulos();
 		
 			static float colorModelo[4] = { 1.f,1.f,1.f,1.f };
 			//float* colorModelo = models[picked]->getMColor();
@@ -481,6 +475,10 @@ void Application::ImGui()
 void Application::Init() {
 
 	shader = new Shader("bw.vert", "bw.frag");
+
+	//Inicializar luces
+	initLights();
+
 }
 
 void Application::setModelTranslation(glm::vec3 modelTranslation)
@@ -511,6 +509,51 @@ void Application::setModelRotate(glm::vec3 quaternion)
 glm::vec3 Application::getModelRotate()
 {
 	return  models[picked]->getRotate();
+}
+
+void Application::initLights()
+{
+	glm::vec3 traslation0;
+	glm::vec4 scale0;
+	glm::vec3 rotate0;
+
+	CObj* light1 = new CObj();
+	if (!light1->load("../Models/sphere.obj")) {
+		cout << "No cargó";
+		return;
+	}
+
+	scale0.x = scale0.y = scale0.z = scale0.w = 1.0f;
+	rotate0.x = rotate0.y = rotate0.z = 0.0f;
+
+	traslation0.x = lightposition1[0];
+	traslation0.y = lightposition1[1];
+	traslation0.z = lightposition1[2];
+	lights.push_back(light1);
+
+	lights[0]->setTranslation(traslation0);
+	lights[0]->setScale(scale0);
+	lights[0]->setRotate(rotate0);
+	lights[0]->setShowTriangulos();
+	lights[0]->setMColor(lightambient[0], lightambient[1], lightambient[2], lightambient[3]);
+	lights[0]->calculateNormals();
+
+	CObj* light2 = new CObj();
+	if (!light2->load("../Models/sphere.obj"))
+		return;
+
+	traslation0.x = lightposition2[0];
+	traslation0.y = lightposition2[1];
+	traslation0.z = lightposition2[2];
+	lights.push_back(light2);
+	
+	lights[1]->setTranslation(traslation0);
+	lights[1]->setScale(scale0);
+	lights[1]->setRotate(rotate0);
+	lights[1]->setShowTriangulos();
+	lights[1]->setMColor(lightambient[0], lightambient[1], lightambient[2], lightambient[3]);
+	lights[1]->calculateNormals();
+
 }
 
 void Application::HelpMarker(const char* desc)

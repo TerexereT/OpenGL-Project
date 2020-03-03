@@ -10,29 +10,14 @@ CModel::CModel()
 	mTranslation[0] = mTranslation[1] = mTranslation[2] = 0.0f;	
 	mScale[0] = mScale[1] = mScale[2] = mScale[3] = 1.0f;
 	mRotate = glm::vec3(0.0f, 0.0f, 0.0f);
-	//modo = PUNTOS;
 	mMColor[0] = mMColor[1] = mMColor[2] = mMColor[3] = 1.0f;
-	//mMColor[3] = mMColor2[0] = mMColor2[1] = mMColor2[2] = mMColor2[3] = 1.0f;
-	//mMColor3[0] = mMColor3[1] = mMColor3[2] = mMColor3[3] = 1.0f;
+	mMColor[3] = mMColor2[0] = mMColor2[1] = mMColor2[2] = mMColor2[3] = 1.0f;
+	mMColor3[0] = mMColor3[1] = mMColor3[2] = mMColor3[3] = 1.0f;
 	mBColor[0] = mBColor[1] = mBColor[2] = 1.0f;
 	mNFColor[0] = mNFColor[1] = mNFColor[2] = 1.0f; 
 	mNVColor[0] = mNVColor[1] = mNVColor[2] = 1.0f;
 	disN = 0.6f;
-	//shininess = 20.0f;
-
-	/*glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glBindVertexArray(VAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(mVertices), &mVertices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-	*/
+	shininess = 20.0f;
 
 }
 
@@ -47,16 +32,51 @@ void CModel::Bind()
 	glBindVertexArray(VAO);
 }
 
-void CModel::Draw()
+void CModel::DrawP()
 {
-	//glDrawArrays(GL_TRIANGLE_STRIP, 0, 3);
+	if (showPuntos)
+	{
+		//glEnable(GL_POLYGON_OFFSET_POINT);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+		//shader->setFloat("mColorR", colorPoint[0]);
+		//shader->setFloat("mColorG", colorPoint[1]);
+		//shader->setFloat("mColorB", colorPoint[2]);
+		//glPolygonOffset(0.0f, 0.0f);
+		glPointSize(2.3f);
+		glDrawElements(GL_TRIANGLES, cantidad, GL_UNSIGNED_INT, nullptr);
+		//glDisable(GL_POLYGON_OFFSET_POINT);
+		glPointSize(1.0f);
+	}
 }
-
-void CModel::display()
+void CModel::DrawL()
 {
-
+	if (showLineas)
+	{
+		glEnable(GL_POLYGON_OFFSET_LINE);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		//shader->setFloat("mColorR", colorLine[0]);
+		//shader->setFloat("mColorG", colorLine[1]);
+		//shader->setFloat("mColorB", colorLine[2]);
+		glPolygonOffset(4.0f, 4.0f);
+		glDrawElements(GL_TRIANGLES, cantidad, GL_UNSIGNED_INT, nullptr);
+		glDisable(GL_POLYGON_OFFSET_LINE);
+	}
 }
-
+void CModel::DrawT()
+{
+	if (showTriangulos)
+	{
+		glEnable(GL_POLYGON_OFFSET_FILL);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		//float* modelColor = modelo->getMColor();
+		//shader->setFloat("mColorR", modelColor[0]);
+		//shader->setFloat("mColorG", modelColor[1]);
+		//shader->setFloat("mColorB", modelColor[2]);
+		glPolygonOffset(8.0f, 8.0f);
+		glDrawElements(GL_TRIANGLES, cantidad, GL_UNSIGNED_INT, nullptr);
+		glDisable(GL_POLYGON_OFFSET_FILL);
+	}
+}
 
 void CModel::BoundingBox()
 {
@@ -197,7 +217,7 @@ void CModel::setMColor(float r, float g, float b, float a)
 	mMColor[3] = a;
 }
 
-/*void CModel::setMColor2(float r, float g, float b, float a)
+void CModel::setMColor2(float r, float g, float b, float a)
 {
 	mMColor2[0] = r;
 	mMColor2[1] = g;
@@ -211,7 +231,7 @@ void CModel::setMColor3(float r, float g, float b, float a)
 	mMColor3[1] = g;
 	mMColor3[2] = b;
 	mMColor3[3] = a;
-}*/
+}
 
 void CModel::setNFColor(float r, float g, float b)
 {
@@ -227,7 +247,7 @@ void CModel::setNVColor(float r, float g, float b)
 	mNVColor[2] = b;
 }
 
-/*void CModel::setshininess(float shini)
+void CModel::setshininess(float shini)
 {
 	shininess = shini;
 }
@@ -235,7 +255,7 @@ void CModel::setNVColor(float r, float g, float b)
 float CModel::getshininess()
 {
 	return shininess;
-}*/
+}
 
 float* CModel::getBColor()
 {
@@ -247,7 +267,7 @@ float* CModel::getMColor()
 	return mMColor;
 }
 
-/*float* CModel::getMColor2()
+float* CModel::getMColor2()
 {
 	return mMColor2;
 }
@@ -255,7 +275,7 @@ float* CModel::getMColor()
 float* CModel::getMColor3()
 {
 	return mMColor3;
-}*/
+}
 
 float* CModel::getNFColor()
 {
@@ -459,18 +479,14 @@ vector<vector<unsigned>> CModel::getCaras()
 
 unsigned int* CModel::getIndex() {
 	unsigned* indices;
-	//cantidad = mNumOfCaras * 3;
 	indices = new unsigned[cantidad];
 	int canI = 0;
 	for (int i = 0; i < cantidad; i += 3) {
-		//cout << "en el arreglo: "<<i << endl;
 		if (canI < mNumOfCaras) {
 			indices[i] = (unsigned int)mCaras[canI][0];
 			indices[i + 1] = (unsigned int)mCaras[canI][1];
 			indices[i + 2] = (unsigned int)mCaras[canI][2];
 			canI++;
-			//cout <<"en el indice: "<< canI << endl;
-			//cout << indices[i] << " " << indices[i + 1] << " " << indices[i + 2] << endl;
 		}
 	}
 	return indices;
@@ -495,11 +511,8 @@ void CModel::setMatRot()
 	R = rotZm * rotYm * rotXm;
 }
 
-//glm::mat4 CModel::getMatModel()
 void CModel::setMatModel()
 {
-	
-
 	glm::vec4 vecScale = this->getScale();
 	glm::mat4 S;
 	if (vecScale.w != 1.0f)
@@ -513,8 +526,6 @@ void CModel::setMatModel()
 	glm::mat4 T = glm::translate(this->getTranslation());
 
 	modl = T * S * R;
-
-	//return modl;
 	
 }
 
