@@ -159,21 +159,20 @@ void Application::Render()
 			modelo->Bind();
 			glm::mat4 modl = modelo->getMatModel();// = glm::mat4(1.0f);
 			shader->setMat4("modl", modl);
-			
-			shader->setFloat("mColorR", colorPoint[0]);
-			shader->setFloat("mColorG", colorPoint[1]);
-			shader->setFloat("mColorB", colorPoint[2]);
+
+			if (!lightSwitch)
+			{
+				//shader->setVec3("mColorL", glm::vec3(1.0f, 1.0f, 1.0f));
+			}
+
+			shader->setVec3("mColorA", glm::vec3(colorPoint[0], colorPoint[1], colorPoint[2]));
 			modelo->DrawP();
-			
-			shader->setFloat("mColorR", colorLine[0]);
-			shader->setFloat("mColorG", colorLine[1]);
-			shader->setFloat("mColorB", colorLine[2]);
+
+			shader->setVec3("mColorA", glm::vec3(colorLine[0], colorLine[1], colorLine[2]));
 			modelo->DrawL();
 			
 			float* modelColor = modelo->getMColor();
-			shader->setFloat("mColorR", modelColor[0]);
-			shader->setFloat("mColorG", modelColor[1]);
-			shader->setFloat("mColorB", modelColor[2]);
+			shader->setVec3("mColorA", glm::vec3(modelColor[0], modelColor[1], modelColor[2]));
 			modelo->DrawT();
 		
 		}
@@ -188,10 +187,11 @@ void Application::Render()
 			glm::mat4 modl = luz->getMatModel();// = glm::mat4(1.0f);
 			shader->setMat4("modl", modl);
 			float* modelColor = luz->getMColor();
-			shader->setFloat("mColorR", modelColor[0]);
-			shader->setFloat("mColorG", modelColor[1]);
-			shader->setFloat("mColorB", modelColor[2]);
+			shader->setVec3("mColorA", glm::vec3(modelColor[0], modelColor[1], modelColor[2]));
 			luz->DrawT();
+			float* colorLuz = luz->getMColor();
+			//shader->setVec3("mColorL", glm::vec3(colorLuz[0], colorLuz[1], colorLuz[2]));
+
 
 		}
 	}
@@ -317,6 +317,14 @@ void Application::ImGui()
 		}
 		ImGui::Checkbox("Lights Switch", &lightSwitch);
 
+		if (lightSwitch)
+		{
+			//Habilitar Luz
+		}else
+		{
+			//Deshabilitar Luz
+		}
+
 	//ImGui::TreePop();
 	//}
 	ImGui::Separator();
@@ -343,14 +351,11 @@ void Application::ImGui()
 			
 			if (actP)
 			{
-
 				if (ImGui::ColorEdit3("Point Color", colorPoint));
 			}
 
 			if (actL)
 			{
-				//models[picked]->BoundingBox();
-				
 				if (ImGui::ColorEdit3("Line Color", colorLine));
 			}
 
@@ -364,49 +369,39 @@ void Application::ImGui()
 			if (actB)
 			{
 				static float colorNormalsB[3] = { 0.6f,1.0f,1.0f };
-				//models[picked]->setNFColor(colorNormalsF[0], colorNormalsF[1], colorNormalsF[2]);
 				if (ImGui::ColorEdit3("Color B", colorNormalsB))
 				{
 					models[picked]->setBColor(colorNormalsB[0], colorNormalsB[1], colorNormalsB[2]);
 				}
-				shader->setFloat("mColorR", colorNormalsB[0]);
-				shader->setFloat("mColorG", colorNormalsB[1]);
-				shader->setFloat("mColorB", colorNormalsB[2]);
+				shader->setVec3("mColorA", glm::vec3(colorNormalsB[0], colorNormalsB[1], colorNormalsB[2]));
 				models[picked]->BoundingBox();
 			}
 
-			if (ImGui::Checkbox("Normals Vertex", &shownormalsV));// models[picked]->displayNormalsVertex();
+			if (ImGui::Checkbox("Normals Vertex", &shownormalsV));
 			if (shownormalsV)
 			{
 				static float colorNormalsV[3] = { 0.6f,1.0f,1.0f };
-				//models[picked]->setNFColor(colorNormalsF[0], colorNormalsF[1], colorNormalsF[2]);
 				if (ImGui::ColorEdit3("Color V", colorNormalsV))
 				{
 					models[picked]->setNVColor(colorNormalsV[0], colorNormalsV[1], colorNormalsV[2]);
 				}
-				shader->setFloat("mColorR", colorNormalsV[0]);
-				shader->setFloat("mColorG", colorNormalsV[1]);
-				shader->setFloat("mColorB", colorNormalsV[2]);
+				shader->setVec3("mColorA", glm::vec3(colorNormalsV[0], colorNormalsV[1], colorNormalsV[2]));
 				models[picked]->displayNormalsVertex();
 			}
 			
 			if(ImGui::Checkbox("Normals Faces", &shownormalsF));
 			if (shownormalsF)
 			{
-				
 				static float colorNormalsF[3] = { 0.5f,0.f,0.6f };
-				//models[picked]->setNFColor(colorNormalsF[0], colorNormalsF[1], colorNormalsF[2]);
 				if (ImGui::ColorEdit3("Color F", colorNormalsF))
 				{
 					models[picked]->setNFColor(colorNormalsF[0], colorNormalsF[1], colorNormalsF[2]);
 				}
-				shader->setFloat("mColorR", colorNormalsF[0]);
-				shader->setFloat("mColorG", colorNormalsF[1]);
-				shader->setFloat("mColorB", colorNormalsF[2]);
+				shader->setVec3("mColorA", glm::vec3(colorNormalsF[0], colorNormalsF[1], colorNormalsF[2]));
 				models[picked]->displayNormalsFace();
 			}
 	
-			if (ImGui::TreeNode("Translation"))
+			if (ImGui::TreeNode("Position"))
 			{
 				
 				//static glm::vec3 translateAux = { 0,0,0 };
@@ -428,7 +423,6 @@ void Application::ImGui()
 			if (ImGui::TreeNode("Scale"))
 			{
 				
-				//static glm::vec4 scaleAux = { 1,1,1,1 };
 				glm::vec4 scaleAux = models[picked]->getScale();
 				ImGui::PushItemWidth(80);
 				ImGui::DragFloat("X", &scaleAux[0], 0.01f);
@@ -446,7 +440,6 @@ void Application::ImGui()
 			if (ImGui::TreeNode("Rotate"))
 			{
 
-				//static glm::vec4 scaleAux = { 1,1,1,1 };
 				glm::vec3 rotateAux = models[picked]->getRotate();
 				ImGui::PushItemWidth(80);
 				ImGui::DragFloat("X", &rotateAux[0], 0.01f);
@@ -466,6 +459,52 @@ void Application::ImGui()
 		ImGui::TreePop();
 	}
 	
+	if (lightSwitch)
+	{
+		if (ImGui::TreeNode("Lights"))
+		{
+			if (ImGui::TreeNode("LightBulb 1"))
+			{
+
+				glm::vec3 translateAux = lights[0]->getTranslation();
+				ImGui::PushItemWidth(80);
+				ImGui::DragFloat("X", &translateAux[0], 0.01f);
+				ImGui::SameLine();
+				ImGui::DragFloat("Y", &translateAux[1], 0.01f);
+				ImGui::SameLine();
+				ImGui::DragFloat("Z", &translateAux[2], 0.01f);
+				ImGui::PopItemWidth();
+				lights[0]->setTranslation(translateAux);
+
+				static float colorLuz[4] = { 1.0f,1.0f,1.0f,1.0f };
+				if (ImGui::ColorEdit4("Ambient Color", colorLuz))lights[0]->setMColor(colorLuz[0], colorLuz[1], colorLuz[2], colorLuz[3]);
+
+
+
+				ImGui::TreePop();
+			}
+			if (ImGui::TreeNode("LightBulb 2"))
+			{
+
+				glm::vec3 translateAux = lights[1]->getTranslation();
+				ImGui::PushItemWidth(80);
+				ImGui::DragFloat("X", &translateAux[0], 0.01f);
+				ImGui::SameLine();
+				ImGui::DragFloat("Y", &translateAux[1], 0.01f);
+				ImGui::SameLine();
+				ImGui::DragFloat("Z", &translateAux[2], 0.01f);
+				ImGui::PopItemWidth();
+
+				lights[1]->setTranslation(translateAux);
+
+				ImGui::TreePop();
+			}
+			
+			ImGui::TreePop();
+		}
+
+	}
+
 	ImGui::Separator();
 
 	ImGui::End();
@@ -518,7 +557,7 @@ void Application::initLights()
 	glm::vec3 rotate0;
 
 	CObj* light1 = new CObj();
-	if (!light1->load("../Models/sphere.obj")) {
+	if (!light1->load("../Models/cubo.obj")) {
 		cout << "No cargó";
 		return;
 	}
@@ -535,11 +574,12 @@ void Application::initLights()
 	lights[0]->setScale(scale0);
 	lights[0]->setRotate(rotate0);
 	lights[0]->setShowTriangulos();
+	lights[0]->setShowLineas();
 	lights[0]->setMColor(lightambient[0], lightambient[1], lightambient[2], lightambient[3]);
 	lights[0]->calculateNormals();
 
 	CObj* light2 = new CObj();
-	if (!light2->load("../Models/sphere.obj"))
+	if (!light2->load("../Models/cubo.obj"))
 		return;
 
 	traslation0.x = lightposition2[0];
