@@ -9,7 +9,7 @@ CModel::CModel()
 	modl = glm::mat4(1.0f);
 	mTranslation[0] = mTranslation[1] = mTranslation[2] = 0.0f;	
 	mScale[0] = mScale[1] = mScale[2] = mScale[3] = 1.0f;
-	mRotate = glm::vec3(0.0f, 0.0f, 0.0f);
+	mRotate = glm::quat(1.0f,0.0f, 0.0f, 0.0f);
 	mMColor[0] = mMColor[1] = mMColor[2] = mMColor[3] = 1.0f;
 	mMColor[3] = mMColor2[0] = mMColor2[1] = mMColor2[2] = mMColor2[3] = 1.0f;
 	mMColor3[0] = mMColor3[1] = mMColor3[2] = mMColor3[3] = 1.0f;
@@ -320,14 +320,28 @@ glm::vec3 CModel::boundingVertex(bool d)
 	}
 }
 
-glm::vec3 CModel::getRotate()
+/*glm::vec3 CModel::getRotate()
 {
+	return mRotate;
+}*/
+
+glm::quat CModel::getRotateQ()
+{
+	//glm::quat quaternion = { 1.0f, mRotate.x,mRotate.y,mRotate.z };
 	return mRotate;
 }
 
 void CModel::setRotate(glm::vec3 quaternion)
 {
 	mRotate = quaternion;
+	this->setMatRot();
+	this->setMatModel();
+}
+
+void CModel::setRotateQ(glm::quat quaternion)
+{
+	mRotate = quaternion;
+	//R = mat4_cast(quaternion);
 	this->setMatRot();
 	this->setMatModel();
 }
@@ -504,11 +518,12 @@ float CModel::getDisN()
 
 void CModel::setMatRot()
 {
-	glm::vec3 rotacion = this->getRotate();
+	/*glm::vec3 rotacion = this->getRotate();
 	glm::mat4 rotXm = glm::rotate(rotacion.x, glm::vec3(1.0, 0.0, 0.0));
 	glm::mat4 rotYm = glm::rotate(rotacion.y, glm::vec3(0.0, 1.0, 0.0));
 	glm::mat4 rotZm = glm::rotate(rotacion.z, glm::vec3(0.0, 0.0, 1.0));
-	R = rotZm * rotYm * rotXm;
+	R = rotZm * rotYm * rotXm;*/
+	R = mat4_cast(mRotate);
 }
 
 void CModel::setMatModel()

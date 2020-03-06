@@ -4,9 +4,6 @@
 //#include <EasyDIPAPI\Loaders.cpp>
 
 
-
-
-
 //extern Shader* bwShader;
 
 Application::Application() {
@@ -136,24 +133,68 @@ void Application::MainLoop()
 		// Rendering
 		ImGui::Render();
 		Render();
+		if (Navigate)
+		{
+			
+			ImGuiIO& input = ImGui::GetIO();
+			ImGui::SetWindowCollapsed("Despliegue 3D", true, 0);
+			for (int i = 0; i < IM_ARRAYSIZE(input.KeysDown); i++)
+			{
+				if (ImGui::IsKeyPressed(i))
+				{
+					/*
+						FORWARD, //87=W
+						BACKWARD, //83=S
+						LEFT, //65=a
+						RIGHT //68=d
+					*/
+					if (i == 87)
+						camara->ProcessKeyboard(FORWARD, 0.03f);
+					if (i == 83)
+						camara->ProcessKeyboard(BACKWARD, 0.04f);
+					if (i == 65)
+						camara->ProcessKeyboard(LEFT, 0.03f);
+					if (i == 68)
+						camara->ProcessKeyboard(RIGHT, 0.03f);
+					if (i == 256)
+						Navigate = false; //Escape
 
+
+				}
+			}
+			
+			
+		}
+		else
+		{
+			ImGui::SetWindowCollapsed("Despliegue 3D", false, 0);
+		}
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		glfwSwapBuffers(window);
+		
 	}
+
+	
 }
 
 void Application::Render()
 {
-	view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 2.0f, 0.0f));
+	const float radius = 10.0f;
+	float camX = sin(glfwGetTime()) * radius;
+	float camZ = cos(glfwGetTime()) * radius;
+	//view = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+
+	view = camara->GetViewMatrix();
+	//view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 2.0f, 0.0f));
 	shader->setMat4("proj", proj);
 	shader->setMat4("view", view);
 
-	if(picked!=-1)
+	if(modelsCount!=-1)
 	{
 
-		for (int i = 0; i <= picked; i++)
+		for (int i = 0; i <= modelsCount; i++)
 		{
 			CModel* modelo = models[i];
 			modelo->Bind();
@@ -214,11 +255,8 @@ void Application::Render()
 
 void Application::ImGui()
 {
-	/*
-	Multicomponents para slider float3
-	PopUp & Modal Windows para file menu
-	*/
-	ImGui::Begin("Despliegue 3D");
+
+	ImGui::Begin("Despliegue 3D",NULL, ImGuiWindowFlags_NoMove);
 
 	if (ImGui::Button("File"))
 		ImGui::OpenPopup("Options");
@@ -230,6 +268,7 @@ void Application::ImGui()
 			if (newM !=NULL)
 			{
 				picked++;
+				modelsCount++;
 				models.push_back(newM);
 
 				glm::vec3 traslation0;
@@ -267,11 +306,8 @@ void Application::ImGui()
 	//if(ImGui::TreeNode("Screen Options"))
 	//{
 		
-		if (ImGui::ColorEdit3("Background Color", colorFondo))
-		{	
-		}
+		ImGui::ColorEdit3("Background Color", colorFondo);
 
-		//Model::setDespliegue(items1[despliegue_current]) para el modelo picked
 		const char* despliegues[Element_COUNT] = { "Perspective", "Orthogonal"};
 		const char* current_element_name = (projectionActual >= 0 && projectionActual < Element_COUNT) ? despliegues[projectionActual] : "Unknown";
 		ImGui::SliderInt("Deployment", &projectionActual, 0, Element_COUNT - 1, current_element_name);
@@ -288,7 +324,7 @@ void Application::ImGui()
 
 
 		ImGui::PushItemWidth(100);
-		if (ImGui::DragFloat("Near Clipping Plane", &NCP, 0.01f));
+		ImGui::DragFloat("Near Clipping Plane", &NCP, 0.01f);
 		ImGui::PopItemWidth();
 	
 		//Aqui va CheckBox para backface culling 
@@ -305,6 +341,7 @@ void Application::ImGui()
 		}
 
 		//Aqui va CheckBox para z-buffer 
+		ImGui::SameLine();
 		ImGui::Checkbox("Z-Buffer", &zBuffer);
 		if (zBuffer)
 		{
@@ -315,15 +352,19 @@ void Application::ImGui()
 		{
 			glDisable(GL_DEPTH_TEST);
 		}
+	
+		ImGui::SameLine();
 		ImGui::Checkbox("Lights Switch", &lightSwitch);
-
 		if (lightSwitch)
 		{
 			//Habilitar Luz
-		}else
+		}
+		else
 		{
 			//Deshabilitar Luz
 		}
+
+		ImGui::Checkbox("Navigate", &Navigate);
 
 	//ImGui::TreePop();
 	//}
@@ -331,8 +372,9 @@ void Application::ImGui()
 
 	if (ImGui::TreeNode("Model")) 
 	{
-		if (picked > -1)
+		if (modelsCount > -1)
 		{
+			//picked = modelsCount;
 			bool actP = models[picked]->getShowPuntos();
 			if (ImGui::Checkbox("Points", &actP))models[picked]->setShowPuntos();
 			ImGui::SameLine();
@@ -351,12 +393,12 @@ void Application::ImGui()
 			
 			if (actP)
 			{
-				if (ImGui::ColorEdit3("Point Color", colorPoint));
+				ImGui::ColorEdit3("Point Color", colorPoint);
 			}
 
 			if (actL)
 			{
-				if (ImGui::ColorEdit3("Line Color", colorLine));
+				ImGui::ColorEdit3("Line Color", colorLine);
 			}
 
 			static float distanciaN = models[picked]->getDisN();
@@ -377,7 +419,7 @@ void Application::ImGui()
 				models[picked]->BoundingBox();
 			}
 
-			if (ImGui::Checkbox("Normals Vertex", &shownormalsV));
+			ImGui::Checkbox("Normals Vertex", &shownormalsV);
 			if (shownormalsV)
 			{
 				static float colorNormalsV[3] = { 0.6f,1.0f,1.0f };
@@ -389,7 +431,7 @@ void Application::ImGui()
 				models[picked]->displayNormalsVertex();
 			}
 			
-			if(ImGui::Checkbox("Normals Faces", &shownormalsF));
+			ImGui::Checkbox("Normals Faces", &shownormalsF);
 			if (shownormalsF)
 			{
 				static float colorNormalsF[3] = { 0.5f,0.f,0.6f };
@@ -440,7 +482,7 @@ void Application::ImGui()
 			if (ImGui::TreeNode("Rotate"))
 			{
 
-				glm::vec3 rotateAux = models[picked]->getRotate();
+				/*glm::vec3 rotateAux = models[picked]->getRotate();
 				ImGui::PushItemWidth(80);
 				ImGui::DragFloat("X", &rotateAux[0], 0.01f);
 				ImGui::SameLine();
@@ -448,7 +490,10 @@ void Application::ImGui()
 				ImGui::SameLine();
 				ImGui::DragFloat("Z", &rotateAux[2], 0.01f);
 				ImGui::PopItemWidth();
-				setModelRotate(rotateAux);
+				setModelRotate(rotateAux);*/
+
+				static glm::quat rotateAux1 = getModelRotate();
+				if(ImGui::gizmo3D("##gizmo1", rotateAux1 /*, size,  mode */))setModelRotate(rotateAux1);
 
 				ImGui::TreePop();
 			}
@@ -456,6 +501,7 @@ void Application::ImGui()
 			
 	
 		} //fin del fi picked !=-1
+
 		ImGui::TreePop();
 	}
 	
@@ -540,14 +586,14 @@ glm::vec4 Application::getModelScale()
 	return models[picked]->getScale();
 }
 
-void Application::setModelRotate(glm::vec3 quaternion)
+void Application::setModelRotate(glm::quat quaternion)
 {
-	models[picked]->setRotate(quaternion);
+	models[picked]->setRotateQ(quaternion);
 }
 
-glm::vec3 Application::getModelRotate()
+glm::quat Application::getModelRotate()
 {
-	return  models[picked]->getRotate();
+	return  models[picked]->getRotateQ();
 }
 
 void Application::initLights()

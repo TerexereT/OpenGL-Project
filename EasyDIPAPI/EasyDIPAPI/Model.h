@@ -44,7 +44,7 @@ class CModel
 		vector<vector<unsigned>> mCaras;
 		glm::vec3 mTranslation;
 		glm::vec4 mScale;
-		glm::vec3 mRotate;
+		glm::quat mRotate;
 		glm::mat4 modl;
 		glm::mat4 R;
 		int mNumOfVertices;
@@ -86,7 +86,9 @@ class CModel
 		void setScale(glm::vec4 scale);
 		glm::vec3 boundingVertex(bool d);
 		glm::vec3 getRotate();
+		glm::quat getRotateQ();
 		void setRotate(glm::vec3 quaternion);
+		void setRotateQ(glm::quat quaternion);
 		int getnumVert();
 		int getNumIndex();
 		bool getShowBox();

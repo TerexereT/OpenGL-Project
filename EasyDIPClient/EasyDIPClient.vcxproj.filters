@@ -18,6 +18,9 @@
     <ClInclude Include="EasyDIPClient\imgui_impl_opengl3.h">
       <Filter>EasyDIPClient</Filter>
     </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>EasyDIPClient</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EasyDIPClient\Application.cpp">

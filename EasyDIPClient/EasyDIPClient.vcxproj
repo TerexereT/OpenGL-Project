@@ -93,6 +93,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="EasyDIPClient\Application.h" />
     <ClInclude Include="EasyDIPClient\EDClientpch.h" />
     <ClInclude Include="EasyDIPClient\imgui_impl_glfw.h" />

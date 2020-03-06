@@ -2,6 +2,7 @@
 
 #include "../imGuIZMO.quat/imGuIZMOquat.h"
 #include "EasyDIPAPI/Loaders.h"
+#include "../Camera.h"
 
 
 
@@ -10,16 +11,18 @@
 
 class Application
 {
-	
+public:
 	float test = 0;
 	//template <typename TT> using ptr = std::shared_ptr<TT>;
 	//ImGui::FileBrowser fileDialog;
 	GLFWwindow *window;
+	Camera *camara = new Camera(glm::vec3(0.0f, 0.0f, 3.0f));
 
 	unsigned int texId = 0;
 	unsigned int texOGImg = 0;
 
 	int picked = -1;
+	int modelsCount = -1;
 	int totalmodels = 0;
 	int windowWidth = 1920;		//1280,1920
 	int windowHeight = 1080;	//720,1080
@@ -35,7 +38,7 @@ class Application
 	float NCP = 0.1f;
 
 	bool show_demo_window = true;
-	bool shownormalsF = false, shownormalsV = false, showBBox = false, showlights = false, backFace = false, zBuffer = true, lightSwitch = false;// , actP = false, actL = false, actT = false;
+	bool shownormalsF = false, shownormalsV = false, showBBox = false, showlights = false, backFace = false, zBuffer = true, lightSwitch = false, Navigate = false;
 
 	vector <CModel*> models;
 	vector <CModel*> lights;
@@ -54,7 +57,7 @@ class Application
 
 	//typeShading shadeactual = FLAT; //Para tarea 4
 
-public:
+
 	Application();
 	~Application();
 	
@@ -69,8 +72,8 @@ public:
 	void Application::setModelScale(glm::vec4 modelScale);
 	glm::vec4 Application::getModelScale();
 
-	void Application::setModelRotate(glm::vec3 quaternion);
-	glm::vec3 Application::getModelRotate();
+	void Application::setModelRotate(glm::quat quaternion);
+	glm::quat Application::getModelRotate();
 
 	void initLights();
 	

@@ -14,5 +14,7 @@ Interfaz gráfica de la app que permite hacer un preview de todas las funciones 
 
 Acá solo se utiliza la API de EasyDIPAPI para trabajar en la app
 
-Para cargar los modelos buscar en la carpeta "Models" dentro del proyecto. No mover el int que muestra los modelos fuera de la cantidad de modelos cargados, empezando en 0.
-Ej: aumentar el int a 3 si solo se han cargado 3 modelos (0,1,2). Al intentar poner el 3 arroja error de memoria por no haber instancia en esa posicion
+Para cargar los modelos buscar en la carpeta "Models" dentro del proyecto.
+"Picked" es para seleccionar el modelo que ha sido previamente cargado, valores mas altos que la cantidad de modelos genera errores.
+
+"Navigate": Permite navegar en la escena, para salir de la navegacion se debe presionar 'ESC', Controles WASD
