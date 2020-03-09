@@ -320,6 +320,11 @@ glm::vec3 CModel::boundingVertex(bool d)
 	}
 }
 
+glm::vec3 CModel::getCenter()
+{
+	return mTranslation;
+}
+
 /*glm::vec3 CModel::getRotate()
 {
 	return mRotate;
@@ -355,12 +360,12 @@ void CModel::setRotateQ(glm::quat quaternion)
 enumModo CModel::getModo()
 {
 	return modo;
-}*/
+}
 
 //void CModel::setShading(typeShading shading)
 //{
 //	this->shading = shading;
-//}
+//}*/
 
 glm::vec4 CModel::getScale()
 {
@@ -417,16 +422,18 @@ void CModel::calculateNormals()
 		cant = 1;
 	}
 
-	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &VBO[0]);
+	glDeleteBuffers(1, &VBO[1]);
 	glDeleteBuffers(1, &IBO);
 	glDeleteVertexArrays(1, &VAO);
 
 	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &VBO[0]);
+	glGenBuffers(1, &VBO[1]);
 	glGenBuffers(1, &IBO);
 	glBindVertexArray(VAO);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
 	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * mNumOfVertices, &mVertices[0], GL_STATIC_DRAW);
@@ -436,6 +443,11 @@ void CModel::calculateNormals()
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * mNumOfCaras, &mNormalesC[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glBindBuffer(GL_ARRAY_BUFFER, 1);
 
 }
 

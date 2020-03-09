@@ -40,7 +40,7 @@ class CModel
 	protected:
 		vector<glm::vec3> mVertices;
 		vector<glm::vec3> mVerticesNorm;
-		unsigned int VBO, VAO, IBO;
+		unsigned int VBO[2], VAO, IBO;
 		vector<vector<unsigned>> mCaras;
 		glm::vec3 mTranslation;
 		glm::vec4 mScale;
@@ -85,6 +85,7 @@ class CModel
 		glm::mat4 getMatModel();
 		void setScale(glm::vec4 scale);
 		glm::vec3 boundingVertex(bool d);
+		glm::vec3 getCenter();
 		glm::vec3 getRotate();
 		glm::quat getRotateQ();
 		void setRotate(glm::vec3 quaternion);

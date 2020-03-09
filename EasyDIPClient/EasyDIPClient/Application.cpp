@@ -135,39 +135,51 @@ void Application::MainLoop()
 		Render();
 		if (Navigate)
 		{
-			
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 			ImGuiIO& input = ImGui::GetIO();
 			ImGui::SetWindowCollapsed("Despliegue 3D", true, 0);
 			for (int i = 0; i < IM_ARRAYSIZE(input.KeysDown); i++)
 			{
 				if (ImGui::IsKeyPressed(i))
 				{
-					/*
-						FORWARD, //87=W
-						BACKWARD, //83=S
-						LEFT, //65=a
-						RIGHT //68=d
-					*/
+	
 					if (i == 87)
-						camara->ProcessKeyboard(FORWARD, 0.03f);
+						camara->ProcessKeyboard(FORWARD, 0.005f);
 					if (i == 83)
-						camara->ProcessKeyboard(BACKWARD, 0.04f);
+						camara->ProcessKeyboard(BACKWARD, 0.007f);
 					if (i == 65)
-						camara->ProcessKeyboard(LEFT, 0.03f);
+						camara->ProcessKeyboard(LEFT, 0.005f);
 					if (i == 68)
-						camara->ProcessKeyboard(RIGHT, 0.03f);
+						camara->ProcessKeyboard(RIGHT, 0.005f);
 					if (i == 256)
 						Navigate = false; //Escape
-
 
 				}
 			}
 			
+			//if (ImGui::IsMousePosValid())
+				//cout << input.MousePos.x << " : " << input.MousePos.y << endl;
+			
+			ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+			if (firstMouse)
+			{
+				lastX = (float)windowWidth / 2.0f, lastY = (float)windowHeight / 2.0f;
+				firstMouse = false;
+			}
+
+			float xoffset = input.MousePos.x - lastX;
+			float yoffset = lastY - input.MousePos.y;
+			camara->ProcessMouseMovement(xoffset, yoffset);
+			lastX = input.MousePos.x;
+			lastY = input.MousePos.y;
 			
 		}
 		else
 		{
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 			ImGui::SetWindowCollapsed("Despliegue 3D", false, 0);
+			ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+			firstMouse = true;
 		}
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -181,19 +193,39 @@ void Application::MainLoop()
 
 void Application::Render()
 {
-	const float radius = 10.0f;
-	float camX = sin(glfwGetTime()) * radius;
-	float camZ = cos(glfwGetTime()) * radius;
-	//view = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
 
 	view = camara->GetViewMatrix();
-	//view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 2.0f, 0.0f));
-	shader->setMat4("proj", proj);
-	shader->setMat4("view", view);
+
+	if (lightSwitch)
+	{
+		shaderL->use();
+		shaderL->setMat4("proj", proj);
+		shaderL->setMat4("view", view);
+		for (int i = 0; i <= 1; i++)
+		{
+			CModel* luz = lights[i];
+			glm::mat4 modl = luz->getMatModel();
+			shaderL->setMat4("modl", modl);
+			luz->Bind();
+			float* modelColor = luz->getMColor();
+			shaderL->setVec3("mColorA", glm::vec3(modelColor[0], modelColor[1], modelColor[2]));
+			luz->DrawT();
+			//float* colorLuz = luz->getMColor();
+			//shaderL->setVec3("mColorL", glm::vec3(colorLuz[0], colorLuz[1], colorLuz[2]));
+
+
+		}
+	}
 
 	if(modelsCount!=-1)
 	{
-
+		shader->use();
+		shader->setMat4("proj", proj);
+		shader->setMat4("view", view);
+		shader->setBool("luz", lightSwitch);
+		glm::vec3 lPos = lights[0]->getTranslation();
+		shader->setVec3("lightPos", lPos);
+		shader->setVec3("viewPos", camara->Position);
 		for (int i = 0; i <= modelsCount; i++)
 		{
 			CModel* modelo = models[i];
@@ -203,41 +235,29 @@ void Application::Render()
 
 			if (!lightSwitch)
 			{
-				//shader->setVec3("mColorL", glm::vec3(1.0f, 1.0f, 1.0f));
+				shader->setVec3("mColorL", glm::vec3(1.0f, 1.0f, 1.0f)); //Color de luz si no hay luz
+			}
+			else
+			{
+				float* colorLuz = lights[0]->getMColor();
+				shader->setVec3("mColorL", glm::vec3(colorLuz[0], colorLuz[1], colorLuz[2]));
 			}
 
-			shader->setVec3("mColorA", glm::vec3(colorPoint[0], colorPoint[1], colorPoint[2]));
+			shader->setVec3("objectColor", glm::vec3(colorPoint[0], colorPoint[1], colorPoint[2]));
 			modelo->DrawP();
 
-			shader->setVec3("mColorA", glm::vec3(colorLine[0], colorLine[1], colorLine[2]));
+			shader->setVec3("objectColor", glm::vec3(colorLine[0], colorLine[1], colorLine[2]));
 			modelo->DrawL();
 			
 			float* modelColor = modelo->getMColor();
-			shader->setVec3("mColorA", glm::vec3(modelColor[0], modelColor[1], modelColor[2]));
+			shader->setVec3("objectColor", glm::vec3(modelColor[0], modelColor[1], modelColor[2]));
 			modelo->DrawT();
 		
 		}
 
 	}
-	if (lightSwitch)
-	{
-		for (int i = 0; i <= 1; i++)
-		{
-			CModel* luz = lights[i];
-			luz->Bind();
-			glm::mat4 modl = luz->getMatModel();// = glm::mat4(1.0f);
-			shader->setMat4("modl", modl);
-			float* modelColor = luz->getMColor();
-			shader->setVec3("mColorA", glm::vec3(modelColor[0], modelColor[1], modelColor[2]));
-			luz->DrawT();
-			float* colorLuz = luz->getMColor();
-			//shader->setVec3("mColorL", glm::vec3(colorLuz[0], colorLuz[1], colorLuz[2]));
 
-
-		}
-	}
-
-	shader->use();
+	//shader->use();
 	
 	/*Quad *quad = Quad::Instance();
 	if (bwShader) {
@@ -285,6 +305,9 @@ void Application::ImGui()
 				models[picked]->setScale(scale0);
 				models[picked]->setRotate(rotate0);
 				models[picked]->calculateNormals();
+				models[picked]->setShowLineas();
+				models[picked]->setShowPuntos();
+				models[picked]->setShowTriangulos();
 
 
 			}
@@ -523,7 +546,7 @@ void Application::ImGui()
 				lights[0]->setTranslation(translateAux);
 
 				static float colorLuz[4] = { 1.0f,1.0f,1.0f,1.0f };
-				if (ImGui::ColorEdit4("Ambient Color", colorLuz))lights[0]->setMColor(colorLuz[0], colorLuz[1], colorLuz[2], colorLuz[3]);
+				if (ImGui::ColorEdit4("Ambient Color 1", colorLuz))lights[0]->setMColor(colorLuz[0], colorLuz[1], colorLuz[2], colorLuz[3]);
 
 
 
@@ -543,6 +566,9 @@ void Application::ImGui()
 
 				lights[1]->setTranslation(translateAux);
 
+				static float colorLuz[4] = { 1.0f,1.0f,1.0f,1.0f };
+				if (ImGui::ColorEdit4("Ambient Color 2", colorLuz))lights[1]->setMColor(colorLuz[0], colorLuz[1], colorLuz[2], colorLuz[3]);
+
 				ImGui::TreePop();
 			}
 			
@@ -560,9 +586,11 @@ void Application::ImGui()
 void Application::Init() {
 
 	shader = new Shader("bw.vert", "bw.frag");
+	shaderL = new Shader("bw.vert", "bwL.frag");
 
 	//Inicializar luces
 	initLights();
+	initScene();
 
 }
 
@@ -608,7 +636,8 @@ void Application::initLights()
 		return;
 	}
 
-	scale0.x = scale0.y = scale0.z = scale0.w = 1.0f;
+	scale0.x = scale0.y = scale0.z = 1.0f;
+	scale0.w = 0.5f;
 	rotate0.x = rotate0.y = rotate0.z = 0.0f;
 
 	traslation0.x = lightposition1[0];
@@ -639,6 +668,89 @@ void Application::initLights()
 	lights[1]->setShowTriangulos();
 	lights[1]->setMColor(lightambient[0], lightambient[1], lightambient[2], lightambient[3]);
 	lights[1]->calculateNormals();
+
+}
+
+void Application::initScene()
+{
+	glm::vec3 traslation0;
+	glm::vec4 scale0;
+	glm::vec3 rotate0;
+
+	CObj* Carro = new CObj();
+	if (!Carro->load("../Models/Porsche_911_GT2.obj")) {
+		cout << "No cargó";
+		return;
+	}
+
+	scale0.x = scale0.y = scale0.z = 1.0f;
+	scale0.w = 1.0f;
+	rotate0.x = rotate0.y = rotate0.z = 0.0f;
+
+	traslation0.x = -5.0f;
+	traslation0.y = 0.0f;
+	traslation0.z = -2.0f;
+	models.push_back(Carro);
+
+	models[0]->setTranslation(traslation0);
+	models[0]->setScale(scale0);
+	models[0]->setRotate(rotate0);
+	models[0]->setShowTriangulos();
+	models[0]->setShowPuntos();
+	models[0]->setShowLineas();
+	models[0]->calculateNormals();
+	modelsCount++;
+	picked++;
+
+	CObj* radio = new CObj();
+	if (!radio->load("../Models/radio.obj")) {
+		cout << "No cargó";
+		return;
+	}
+
+	scale0.x = scale0.y = scale0.z = 1.0f;
+	scale0.w = 1.0f;
+	rotate0.x = rotate0.y = rotate0.z = 0.0f;
+
+	traslation0.x = 5.0f;
+	traslation0.y = 3.0f;
+	traslation0.z = 2.0f;
+	models.push_back(radio);
+
+	models[1]->setTranslation(traslation0);
+	models[1]->setScale(scale0);
+	models[1]->setRotate(rotate0);
+	models[1]->setShowTriangulos();
+	models[1]->setShowPuntos();
+	models[1]->setShowLineas();
+	models[1]->calculateNormals();
+	modelsCount++;
+	picked++;
+
+	CObj* batman = new CObj();
+	if (!batman->load("../Models/Batman.obj")) {
+		cout << "No cargó";
+		return;
+	}
+
+	scale0.x = scale0.y = scale0.z = 1.0f;
+	scale0.w = 1.0f;
+	rotate0.x = rotate0.y = rotate0.z = 0.0f;
+
+	traslation0.x = 0.0f;
+	traslation0.y = 0.0f;
+	traslation0.z = -4.0f;
+	models.push_back(batman);
+
+	models[2]->setTranslation(traslation0);
+	models[2]->setScale(scale0);
+	models[2]->setRotate(rotate0);
+	models[2]->setShowTriangulos();
+	models[2]->setShowPuntos();
+	models[2]->setShowLineas();
+	models[2]->calculateNormals();
+	modelsCount++;
+	picked++;
 
 }
 
