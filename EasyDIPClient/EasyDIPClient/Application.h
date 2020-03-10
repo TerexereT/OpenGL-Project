@@ -16,7 +16,7 @@ public:
 	//template <typename TT> using ptr = std::shared_ptr<TT>;
 	//ImGui::FileBrowser fileDialog;
 	GLFWwindow *window;
-	Camera *camara = new Camera(glm::vec3(0.0f, 0.0f, 10.0f));
+	Camera *camara = new Camera(glm::vec3(0.0f, 0.0f, 8.0f));
 
 	unsigned int texId = 0;
 	unsigned int texOGImg = 0;
@@ -39,7 +39,7 @@ public:
 	float lastX = windowWidth/2.0f, lastY = windowHeight/2.0f;
 
 	bool show_demo_window = true;
-	bool shownormalsF = false, shownormalsV = false, showBBox = false, showlights = false, backFace = false, zBuffer = true, lightSwitch = false, Navigate = false, firstMouse = true;
+	bool shownormalsF = false, shownormalsV = false, showBBox = false, showlights = false, backFace = false, zBuffer = true, lightSwitch = false, Navigate = false, firstMouse = true, flat = false;
 
 	vector <CModel*> models;
 	vector <CModel*> lights;
@@ -54,8 +54,8 @@ public:
 	glm::vec4 lightambient = { 1.0, 1.0, 1.0, 1.0 };
 	glm::vec4 lightdiffuse = { 1.0, 1.0, 1.0, 1.0 };
 	glm::vec4 lightspecular = { 1.0, 1.0, 1.0, 1.0 };
-	glm::vec3 lightposition1 = { 2.0, -2.0, 5.0};
-	glm::vec3 lightposition2 = { -2.0, 2.0, -7.0};
+	glm::vec3 lightposition1 = { 2.0, -1.0, 5.0};
+	glm::vec3 lightposition2 = { -2.0, 2.0, -5.0};
 
 	//typeShading shadeactual = FLAT; //Para tarea 4
 

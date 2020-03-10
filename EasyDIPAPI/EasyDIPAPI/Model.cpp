@@ -1,8 +1,6 @@
 #include "Model.h"
 
-//unsigned int CModel::VBO = 0;
-//unsigned int CModel::VAO = 0;
-
+#define BUFFER_OFFSET(offset) ((char*)NULL + (offset))
 
 CModel::CModel()
 {
@@ -17,7 +15,7 @@ CModel::CModel()
 	mNFColor[0] = mNFColor[1] = mNFColor[2] = 1.0f; 
 	mNVColor[0] = mNVColor[1] = mNVColor[2] = 1.0f;
 	disN = 0.6f;
-	shininess = 20.0f;
+	shininess = 32.0f;
 
 }
 
@@ -36,15 +34,10 @@ void CModel::DrawP()
 {
 	if (showPuntos)
 	{
-		//glEnable(GL_POLYGON_OFFSET_POINT);
+	
 		glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-		//shader->setFloat("mColorR", colorPoint[0]);
-		//shader->setFloat("mColorG", colorPoint[1]);
-		//shader->setFloat("mColorB", colorPoint[2]);
-		//glPolygonOffset(0.0f, 0.0f);
-		glPointSize(2.3f);
+		glPointSize(2.0f);
 		glDrawElements(GL_TRIANGLES, cantidad, GL_UNSIGNED_INT, nullptr);
-		//glDisable(GL_POLYGON_OFFSET_POINT);
 		glPointSize(1.0f);
 	}
 }
@@ -54,9 +47,6 @@ void CModel::DrawL()
 	{
 		glEnable(GL_POLYGON_OFFSET_LINE);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		//shader->setFloat("mColorR", colorLine[0]);
-		//shader->setFloat("mColorG", colorLine[1]);
-		//shader->setFloat("mColorB", colorLine[2]);
 		glPolygonOffset(4.0f, 4.0f);
 		glDrawElements(GL_TRIANGLES, cantidad, GL_UNSIGNED_INT, nullptr);
 		glDisable(GL_POLYGON_OFFSET_LINE);
@@ -68,10 +58,6 @@ void CModel::DrawT()
 	{
 		glEnable(GL_POLYGON_OFFSET_FILL);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		//float* modelColor = modelo->getMColor();
-		//shader->setFloat("mColorR", modelColor[0]);
-		//shader->setFloat("mColorG", modelColor[1]);
-		//shader->setFloat("mColorB", modelColor[2]);
 		glPolygonOffset(8.0f, 8.0f);
 		glDrawElements(GL_TRIANGLES, cantidad, GL_UNSIGNED_INT, nullptr);
 		glDisable(GL_POLYGON_OFFSET_FILL);
@@ -422,40 +408,39 @@ void CModel::calculateNormals()
 		cant = 1;
 	}
 
-	glDeleteBuffers(1, &VBO[0]);
-	glDeleteBuffers(1, &VBO[1]);
+	glDeleteBuffers(1, &VBO);
 	glDeleteBuffers(1, &IBO);
 	glDeleteVertexArrays(1, &VAO);
 
 	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO[0]);
-	glGenBuffers(1, &VBO[1]);
+	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &IBO);
 	glBindVertexArray(VAO);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * mNumOfVertices, &mVertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * (2 * mNumOfVertices + mNumOfCaras), NULL, GL_STATIC_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::vec3) * mNumOfVertices, &mVertices[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * mNumOfVertices, sizeof(glm::vec3) * mNumOfVertices, &mNormalesV[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * (mNumOfVertices + mNumOfVertices) , sizeof(glm::vec3) * mNumOfCaras, &mNormalesC[0]);
+
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned) * cantidad, this->getIndex(), GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(sizeof(glm::vec3) * mNumOfVertices));// BUFFER_OFFSET(sizeof(glm::vec3) * mNumOfVertices));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(sizeof(glm::vec3) * (mNumOfVertices*2)));
 	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * mNumOfCaras, &mNormalesC[0], GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glBindBuffer(GL_ARRAY_BUFFER, 1);
 
 }
 
 void CModel::displayNormalsFace()
 {
 
-	//glDisable(GL_LIGHTING);
-	//glColor3f(mNFColor[0], mNFColor[1], mNFColor[2]);	
 	glPointSize(1.0);
 	for (int i = 0; i < mNormalesC.size(); i++)
 	{
@@ -475,8 +460,7 @@ void CModel::displayNormalsFace()
 
 void CModel::displayNormalsVertex()
 {
-	//glDisable(GL_LIGHTING);
-	//glColor3f(mNVColor[0], mNVColor[1], mNVColor[2]);
+
 	glPointSize(1.0);
 	for (int i = 0; i < mNormalesV.size(); i++)
 	{

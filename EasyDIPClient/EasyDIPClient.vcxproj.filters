@@ -6,6 +6,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="EasyDIPClient\Application.h">
       <Filter>EasyDIPClient</Filter>
     </ClInclude>
@@ -16,9 +17,6 @@
       <Filter>EasyDIPClient</Filter>
     </ClInclude>
     <ClInclude Include="EasyDIPClient\imgui_impl_opengl3.h">
-      <Filter>EasyDIPClient</Filter>
-    </ClInclude>
-    <ClInclude Include="Camera.h">
       <Filter>EasyDIPClient</Filter>
     </ClInclude>
   </ItemGroup>
@@ -38,5 +36,19 @@
     <ClCompile Include="EasyDIPClient\main.cpp">
       <Filter>EasyDIPClient</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bw.frag">
+      <Filter>EasyDIPClient</Filter>
+    </None>
+    <None Include="bw.vert">
+      <Filter>EasyDIPClient</Filter>
+    </None>
+    <None Include="bwL.frag">
+      <Filter>EasyDIPClient</Filter>
+    </None>
+    <None Include="bwL.vert">
+      <Filter>EasyDIPClient</Filter>
+    </None>
   </ItemGroup>
 </Project>

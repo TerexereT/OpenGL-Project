@@ -40,7 +40,7 @@ class CModel
 	protected:
 		vector<glm::vec3> mVertices;
 		vector<glm::vec3> mVerticesNorm;
-		unsigned int VBO[2], VAO, IBO;
+		unsigned int VBO, VAO, IBO;
 		vector<vector<unsigned>> mCaras;
 		glm::vec3 mTranslation;
 		glm::vec4 mScale;

@@ -23,4 +23,8 @@ Para cargar los modelos buscar en la carpeta <b>"Models"</b> dentro del proyecto
 <b>"Navigate"</b>: Permite navegar en la escena, para salir de la navegacion se debe presionar 'ESC', Controles WASD
 ![OpenGL-Project1](https://raw.githubusercontent.com/TerexereT/OpenGL-Project/master/Screenshots/SS02.jpg)
 
+Iluminacion: al activar el <b> LightSwitch </b> esterenderiza unos cubos que permiten el elegir el color ambiental, difusso y especular de cada bombillo;
+establecer su posicion en la escena para alterar la reflectividad. Si se activa el Flat Shadding genera errores. Para jugar con la reflectividad del modelo se debe variar el <b> Shininess</b>.
+![OpenGL-Project2](https://raw.githubusercontent.com/TerexereT/OpenGL-Project/master/Screenshots/LightGIF.gif)
+
 </p>

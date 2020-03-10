@@ -148,9 +148,9 @@ void Application::MainLoop()
 					if (i == 83)
 						camara->ProcessKeyboard(BACKWARD, 0.007f);
 					if (i == 65)
-						camara->ProcessKeyboard(LEFT, 0.005f);
+						camara->ProcessKeyboard(LEFT, 0.004f);
 					if (i == 68)
-						camara->ProcessKeyboard(RIGHT, 0.005f);
+						camara->ProcessKeyboard(RIGHT, 0.004f);
 					if (i == 256)
 						Navigate = false; //Escape
 
@@ -177,7 +177,7 @@ void Application::MainLoop()
 		else
 		{
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-			ImGui::SetWindowCollapsed("Despliegue 3D", false, 0);
+			//ImGui::SetWindowCollapsed("Despliegue 3D", false, 0);
 			ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
 			firstMouse = true;
 		}
@@ -223,8 +223,7 @@ void Application::Render()
 		shader->setMat4("proj", proj);
 		shader->setMat4("view", view);
 		shader->setBool("luz", lightSwitch);
-		glm::vec3 lPos = lights[0]->getTranslation();
-		shader->setVec3("lightPos", lPos);
+		shader->setBool("N", flat);
 		shader->setVec3("viewPos", camara->Position);
 		for (int i = 0; i <= modelsCount; i++)
 		{
@@ -239,8 +238,29 @@ void Application::Render()
 			}
 			else
 			{
+				
+				glm::vec3 lPos = lights[0]->getTranslation();
+				shader->setVec3("pointLights[0].position", lPos);
 				float* colorLuz = lights[0]->getMColor();
-				shader->setVec3("mColorL", glm::vec3(colorLuz[0], colorLuz[1], colorLuz[2]));
+				shader->setVec3("pointLights[0].ambient", glm::vec3(colorLuz[0], colorLuz[1], colorLuz[2]));
+				float* colorLuz2 = lights[0]->getMColor2();
+				shader->setVec3("pointLights[0].diffuse", glm::vec3(colorLuz2[0], colorLuz2[1], colorLuz2[2]));
+				float* colorLuz3 = lights[0]->getMColor3();
+				shader->setVec3("pointLights[0].specular", glm::vec3(colorLuz3[0], colorLuz3[1], colorLuz3[2]));
+				shader->setFloat("pointLights[0].constant", 1.0f);
+				shader->setFloat("pointLights[0].linear", 0.09);
+				shader->setFloat("pointLights[0].quadratic", 0.032);
+				glm::vec3 lPos2 = lights[1]->getTranslation();
+				shader->setVec3("pointLights[1].position", lPos2);
+				float* colorLuz4 = lights[1]->getMColor();
+				shader->setVec3("pointLights[1].ambient", glm::vec3(colorLuz4[0], colorLuz4[1], colorLuz4[2]));
+				float* colorLuz5 = lights[1]->getMColor2();
+				shader->setVec3("pointLights[1].diffuse", glm::vec3(colorLuz5[0], colorLuz5[1], colorLuz5[2]));
+				float* colorLuz6 = lights[1]->getMColor3();
+				shader->setVec3("pointLights[1].specular", glm::vec3(colorLuz6[0], colorLuz6[1], colorLuz6[2]));
+				shader->setFloat("pointLights[1].constant", 1.0f);
+				shader->setFloat("pointLights[1].linear", 0.09);
+				shader->setFloat("pointLights[1].quadratic", 0.032);
 			}
 
 			shader->setVec3("objectColor", glm::vec3(colorPoint[0], colorPoint[1], colorPoint[2]));
@@ -251,6 +271,15 @@ void Application::Render()
 			
 			float* modelColor = modelo->getMColor();
 			shader->setVec3("objectColor", glm::vec3(modelColor[0], modelColor[1], modelColor[2]));
+
+			float* MC2 = modelo->getMColor2();
+			shader->setVec3("diffuse", glm::vec3(MC2[0], MC2[1], MC2[2]));
+
+			float* MC3 = modelo->getMColor3();
+			shader->setVec3("specular", glm::vec3(MC3[0], MC3[1], MC3[2]));
+
+			float SH = modelo->getshininess();
+			shader->setFloat("shininess", SH);
 			modelo->DrawT();
 		
 		}
@@ -412,7 +441,18 @@ void Application::ImGui()
 			static float colorModelo[4] = { 1.f,1.f,1.f,1.f };
 			//float* colorModelo = models[picked]->getMColor();
 			if(ImGui::ColorEdit4("Model Color", colorModelo))models[picked]->setMColor(colorModelo[0], colorModelo[1], colorModelo[2], colorModelo[3]);
+
+			//static float colorModelo2[4] = { 1.f,1.f,1.f,1.f };
+			float* colorMod2 = models[picked]->getMColor2();
+			if (ImGui::ColorEdit4("Diffuse", colorMod2))models[picked]->setMColor2(colorMod2[0], colorMod2[1], colorMod2[2], colorMod2[3]);
 				//models[picked]->setMColor(colorModelo[0], colorModelo[1], colorModelo[2], colorModelo[3]);
+
+			//static float colorModelo3[4] = { 1.f,1.f,1.f,1.f };
+			float* colMod3 = models[picked]->getMColor3();
+			if (ImGui::ColorEdit4("specular", colMod3))models[picked]->setMColor3(colMod3[0], colMod3[1], colMod3[2], colMod3[3]);
+
+			static float shinM = models[picked]->getshininess();
+			if (ImGui::DragFloat("Shininess", &shinM, 0.05f))models[picked]->setshininess(shinM);
 			
 			if (actP)
 			{
@@ -424,7 +464,7 @@ void Application::ImGui()
 				ImGui::ColorEdit3("Line Color", colorLine);
 			}
 
-			static float distanciaN = models[picked]->getDisN();
+			/*static float distanciaN = models[picked]->getDisN();
 			ImGui::PushItemWidth(100);
 			if (ImGui::DragFloat("Normal Distance", &distanciaN, 0.01f))models[picked]->setDisN(distanciaN);
 			ImGui::PopItemWidth();
@@ -464,7 +504,7 @@ void Application::ImGui()
 				}
 				shader->setVec3("mColorA", glm::vec3(colorNormalsF[0], colorNormalsF[1], colorNormalsF[2]));
 				models[picked]->displayNormalsFace();
-			}
+			}*/
 	
 			if (ImGui::TreeNode("Position"))
 			{
@@ -532,46 +572,32 @@ void Application::ImGui()
 	{
 		if (ImGui::TreeNode("Lights"))
 		{
-			if (ImGui::TreeNode("LightBulb 1"))
-			{
-
-				glm::vec3 translateAux = lights[0]->getTranslation();
-				ImGui::PushItemWidth(80);
-				ImGui::DragFloat("X", &translateAux[0], 0.01f);
-				ImGui::SameLine();
-				ImGui::DragFloat("Y", &translateAux[1], 0.01f);
-				ImGui::SameLine();
-				ImGui::DragFloat("Z", &translateAux[2], 0.01f);
-				ImGui::PopItemWidth();
-				lights[0]->setTranslation(translateAux);
-
-				static float colorLuz[4] = { 1.0f,1.0f,1.0f,1.0f };
-				if (ImGui::ColorEdit4("Ambient Color 1", colorLuz))lights[0]->setMColor(colorLuz[0], colorLuz[1], colorLuz[2], colorLuz[3]);
-
-
-
-				ImGui::TreePop();
-			}
-			if (ImGui::TreeNode("LightBulb 2"))
-			{
-
-				glm::vec3 translateAux = lights[1]->getTranslation();
-				ImGui::PushItemWidth(80);
-				ImGui::DragFloat("X", &translateAux[0], 0.01f);
-				ImGui::SameLine();
-				ImGui::DragFloat("Y", &translateAux[1], 0.01f);
-				ImGui::SameLine();
-				ImGui::DragFloat("Z", &translateAux[2], 0.01f);
-				ImGui::PopItemWidth();
-
-				lights[1]->setTranslation(translateAux);
-
-				static float colorLuz[4] = { 1.0f,1.0f,1.0f,1.0f };
-				if (ImGui::ColorEdit4("Ambient Color 2", colorLuz))lights[1]->setMColor(colorLuz[0], colorLuz[1], colorLuz[2], colorLuz[3]);
-
-				ImGui::TreePop();
-			}
+			if (ImGui::Checkbox("Flat Shadding (Default: Phong)", &flat));
 			
+			static int i1 = 0;
+			ImGui::SliderInt("Pick Lightbulb", &i1, 0, 1);
+				
+			CModel* luz = lights[i1];
+				glm::vec3 translateAux = luz->getTranslation();
+				ImGui::PushItemWidth(80);
+				ImGui::DragFloat("X", &translateAux[0], 0.01f);
+				ImGui::SameLine();
+				ImGui::DragFloat("Y", &translateAux[1], 0.01f);
+				ImGui::SameLine();
+				ImGui::DragFloat("Z", &translateAux[2], 0.01f);
+				ImGui::PopItemWidth();
+				luz->setTranslation(translateAux);
+
+				static float colorLuz[4] = { 1.0f,1.0f,1.0f,1.0f };
+				if (ImGui::ColorEdit4("Ambient Color 1", colorLuz))luz->setMColor(colorLuz[0], colorLuz[1], colorLuz[2], colorLuz[3]);
+
+				static float colorLuz2[4] = { 1.0f,1.0f,1.0f,1.0f };
+				if (ImGui::ColorEdit4("Diffuse Color 1", colorLuz2))luz->setMColor2(colorLuz2[0], colorLuz2[1], colorLuz2[2], colorLuz2[3]);
+
+				static float colorLuz3[4] = { 1.0f,1.0f,1.0f,1.0f };
+				if (ImGui::ColorEdit4("Specular Color 1", colorLuz3))luz->setMColor3(colorLuz3[0], colorLuz3[1], colorLuz3[2], colorLuz3[3]);
+
+
 			ImGui::TreePop();
 		}
 
@@ -637,7 +663,7 @@ void Application::initLights()
 	}
 
 	scale0.x = scale0.y = scale0.z = 1.0f;
-	scale0.w = 0.5f;
+	scale0.w = 0.25f;
 	rotate0.x = rotate0.y = rotate0.z = 0.0f;
 
 	traslation0.x = lightposition1[0];
@@ -696,8 +722,8 @@ void Application::initScene()
 	models[0]->setScale(scale0);
 	models[0]->setRotate(rotate0);
 	models[0]->setShowTriangulos();
-	models[0]->setShowPuntos();
-	models[0]->setShowLineas();
+	//models[0]->setShowPuntos();
+	//models[0]->setShowLineas();
 	models[0]->calculateNormals();
 	modelsCount++;
 	picked++;
@@ -713,16 +739,16 @@ void Application::initScene()
 	rotate0.x = rotate0.y = rotate0.z = 0.0f;
 
 	traslation0.x = 5.0f;
-	traslation0.y = 3.0f;
-	traslation0.z = 2.0f;
+	traslation0.y = 0.0f;
+	traslation0.z = -2.0f;
 	models.push_back(radio);
 
 	models[1]->setTranslation(traslation0);
 	models[1]->setScale(scale0);
 	models[1]->setRotate(rotate0);
 	models[1]->setShowTriangulos();
-	models[1]->setShowPuntos();
-	models[1]->setShowLineas();
+	//models[1]->setShowPuntos();
+	//models[1]->setShowLineas();
 	models[1]->calculateNormals();
 	modelsCount++;
 	picked++;
@@ -739,15 +765,15 @@ void Application::initScene()
 
 	traslation0.x = 0.0f;
 	traslation0.y = 0.0f;
-	traslation0.z = -4.0f;
+	traslation0.z = -2.0f;
 	models.push_back(batman);
 
 	models[2]->setTranslation(traslation0);
 	models[2]->setScale(scale0);
 	models[2]->setRotate(rotate0);
 	models[2]->setShowTriangulos();
-	models[2]->setShowPuntos();
-	models[2]->setShowLineas();
+	//models[2]->setShowPuntos();
+	//models[2]->setShowLineas();
 	models[2]->calculateNormals();
 	modelsCount++;
 	picked++;
